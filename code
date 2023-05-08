@@ -1,0 +1,56 @@
+import cv2
+import numpy as np
+import face_recognition as face_rec
+import os
+
+
+# function for resizing the image
+def resize(img,size):
+
+    height=int(img.shape[0]*size)
+    width=int(img.shape[1]*size)
+    dimension=(width,height)
+    return cv2.resize(img,dimension,interpolation=cv2.INTER_AREA)
+    
+voters_encoded=[]   # to store face datas of voters in a locality
+# finding face locations and encodings of each voters in the localty and adding to the list
+for i in os.listdir('/home/hishaaam/Desktop/vsc/project3/voters'):
+    
+    path=os.path.join('/home/hishaaam/Desktop/vsc/project3/voters',i)
+    image=face_rec.load_image_file(path)
+    image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
+    image=resize(image,0.50)
+    facelocation_image=face_rec.face_locations(image)[0]
+    encode_image=face_rec.face_encodings(image)[0]
+    cv2.rectangle(image,(facelocation_image[3],facelocation_image[0]),(facelocation_image[1],facelocation_image[2]),(255,0,255),2)
+    voters_encoded.append(encode_image)
+
+# function for finding face locations and encodings of voters
+def identify(test_img):
+
+     resize(test_img,.50)
+     facelocation_img=face_rec.face_locations(test_img)[0]
+     encoding_test_img=face_rec.face_encodings(test_img)[0]
+     cv2.rectangle(test_img,(facelocation_img[3],facelocation_img[0]),(facelocation_img[1],facelocation_img[2]),(0,255,0),2)
+     result=face_rec.compare_faces(voters_encoded,encoding_test_img)
+     return result
+     
+     
+ voted_people=[]
+ vid = cv2.VideoCapture(0)
+ while True :
+     success, img_test = vid.read()
+   #   appliying function and taking only True index value
+     person=identify (img_test).index(True)
+    
+     if person not in voted_people:
+        voted_people.append(person)
+        print ('voting')
+        print('voting')
+        
+     else:
+        print('person already voted')
+        
+
+    cv2.imshow('video',img_test)
+    cv2.waitKey(1)
